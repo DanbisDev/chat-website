@@ -1,8 +1,20 @@
 from fastapi.testclient import TestClient
 
+from datetime import date
 from backend.main import app
 
 client = TestClient(app)
+
+def test_create_user():
+    response = client.post("/users", json={"id": "juniper"})
+    assert response.status_code == 200
+
+    data = response.json()
+    assert data["user"]["id"] == "juniper"
+
+    response = client.get("/users/juniper")
+    assert response.status_code == 200
+    assert response.json()["user"]["id"] == "juniper"
 
 # User Endpoint Tests
 def test_get_all_users():
@@ -50,6 +62,7 @@ def test_update_name():
 
     assert response.json() == expected_response
     assert response.status_code == 200
+
 
 def test_check_name_updated():
     client = TestClient(app)

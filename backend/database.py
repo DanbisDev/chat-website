@@ -1,5 +1,5 @@
 import json
-from datetime import date
+from datetime import datetime
 from uuid import uuid4
 
 
@@ -37,7 +37,7 @@ def create_user(user_create: UserCreate) -> User:
     :raises EntityAlreadyExistsException: if the user id already exists in the DB
     """
     user = UserInDB(
-        created_at = date.today(),
+        created_at = datetime.now().isoformat(),
         **user_create.model_dump()
     )
 
