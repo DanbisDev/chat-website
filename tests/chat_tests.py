@@ -104,7 +104,11 @@ def test_delete_chat():
     response = client.delete("chats/6215e6864e884132baa01f7f972400e2")
 
     assert response.status_code == 204
-    assert response.json() == None
+    assert response.content == b""
+
+    response = client.get("chats/6215e6864e884132baa01f7f972400e2")
+
+    assert response.status_code == 404
 
 def test_delete_fake_chat():
     response = client.delete("chats/12")

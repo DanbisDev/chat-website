@@ -23,11 +23,10 @@ def get_chat_by_id(chat_id: str):
 def update_chat_name(chat_id:str, new_name:ChatNameUpdate):
     return db.update_chat_name(chat_id, new_name)
 
-@chats_router.delete("/{chat_id}")
+@chats_router.delete("/{chat_id}", status_code = 204)
 def delete_chat_by_id(chat_id:str):
     db.delete_chat_by_id(chat_id)
 
-    return JSONResponse(content=None, status_code=204)
 
 @chats_router.get("/{chat_id}/messages", response_model=MessageCollection)
 def get_message_col_by_chat_id(chat_id:str):
