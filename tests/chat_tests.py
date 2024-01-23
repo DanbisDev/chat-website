@@ -56,7 +56,7 @@ def test_check_name_updated():
     response = client.get("/chats/6215e6864e884132baa01f7f972400e2")
     expected_response = {"chat": {
         "id": "6215e6864e884132baa01f7f972400e2",
-        "name": "skynet",
+        "name": "new chat name",
         "user_ids": ["sarah", "terminator"],
         "owner_id":"sarah",
         "created_at":"2023-07-08T18:46:47"

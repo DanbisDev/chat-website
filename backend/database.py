@@ -121,6 +121,7 @@ def update_chat_name(chat_id:str, new_name:ChatNameUpdate) -> Chat:
     """
     chat = get_chat_by_id(chat_id)
     chat.chat.name = new_name.name
+    DB["chats"][chat_id]["name"] = new_name.name
     return chat
     
 def delete_chat_by_id(chat_id:str):
