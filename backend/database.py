@@ -117,7 +117,7 @@ def update_chat_name(chat_id:str, new_name:ChatNameUpdate) -> Chat:
     :param chat_id: the chat id to grab
     :param new_name: the new name the chat should have
     :returns: A chat object with the updated name
-    :raises EntityNotFoundException: if the chat doesn't exist in the DB
+    :raises EntityNotFoundException: if the chat doesn't exist in the DataBase
     """
     chat = get_chat_by_id(chat_id)
     chat.chat.name = new_name.name
