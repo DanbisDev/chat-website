@@ -119,18 +119,9 @@ def update_chat_name(chat_id:str, new_name:ChatNameUpdate) -> Chat:
     :returns: A chat object with the updated name
     :raises EntityNotFoundException: if the chat doesn't exist in the DB
     """
-    if chat_id in DB["chats"]:
-        chat = DB["chats"][chat_id]
-        chat["name"] = new_name
-        return Chat(chat = ChatInDB(
-            id = chat["id"],
-            **new_name.model_dump(),
-            user_ids = chat["user_ids"],
-            owner_id= chat["owner_id"],
-            created_at = chat["created_at"]
-        ))
-    else:
-        raise EntityNotFoundException(entity_name="Chat", entity_id=chat_id)
+    chat = get_chat_by_id(chat_id)
+    chat.chat.name = new_name.name
+    return chat
     
 def delete_chat_by_id(chat_id:str):
     """

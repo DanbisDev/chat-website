@@ -51,6 +51,20 @@ def test_update_name():
     assert response.json() == expected_response
     assert response.status_code == 200
 
+def test_check_name_updated():
+    client = TestClient(app)
+    response = client.get("/chats/6215e6864e884132baa01f7f972400e2")
+    expected_response = {"chat": {
+        "id": "6215e6864e884132baa01f7f972400e2",
+        "name": "skynet",
+        "user_ids": ["sarah", "terminator"],
+        "owner_id":"sarah",
+        "created_at":"2023-07-08T18:46:47"
+    }}
+
+    assert response.status_code == 200
+    assert response.json() == expected_response
+
 def test_update_name_fake_chat():
     response = client.put("chats/12", json={"name":"new chat name"})
     expected_response = {
@@ -140,3 +154,4 @@ def test_get_users_in_chat_by_chat_id_fake_id():
 
     assert response.status_code == 404
     assert response.json() == expected_response
+    
