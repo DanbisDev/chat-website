@@ -23,6 +23,7 @@ def get_chat_by_id(chat_id: str):
     """
     Get Chat by ID
     """
+    print(chat_id)
     return db.get_chat_by_id(chat_id)
 
 @chats_router.put("/{chat_id}", response_model=Chat)

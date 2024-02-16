@@ -1,4 +1,5 @@
 from fastapi import FastAPI, Request
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, HTMLResponse
 from backend.routers.users import users_router
 from backend.routers.chats import chats_router
@@ -16,6 +17,14 @@ app = FastAPI(
 
 app.include_router(users_router)
 app.include_router(chats_router)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:5173"], # change this as appropriate for your setup
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 @app.get("/", include_in_schema=False)
 def default() -> str:

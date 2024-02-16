@@ -136,7 +136,7 @@ def delete_chat_by_id(chat_id:str):
     else:
         raise EntityNotFoundException(entity_name="Chat", entity_id=chat_id)
 
-def get_message_col_by_chat_id(chat_id:str) -> MessageCollection:
+def  get_message_col_by_chat_id(chat_id:str) -> MessageCollection:
     """
     Gets a collection of messages given from a single chat with the provided
     chat id
