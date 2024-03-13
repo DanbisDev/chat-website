@@ -31,11 +31,11 @@ def create_user(user_create: UserCreate):
 
 
 @users_router.get("/{user_id}", response_model=User)
-def get_user(user_id: str):
+def get_user(user_id: int):
     """Get new user data from the database"""
     return db.get_user(user_id)
 
 @users_router.get("/{user_id}/chats", response_model=ChatCollection)
-def get_user_chats(user_id: str):
+def get_user_chats(user_id: int):
     """Get a list of all chats a given user has participated in"""
     return db.get_user_chats(user_id)
