@@ -1,8 +1,16 @@
 from datetime import datetime
 from uuid import uuid4
-from sqlmodel import Session, SQLModel, create_engine
+from sqlmodel import Session, SQLModel, create_engine, select
+from backend.schema import UserInDB, ChatInDB, MessageInDB, UserChatLinkInDB
 
-from schema import *
+from backend.entities import (
+    UserCollection,
+    UserCreate,
+    User,
+    UserResponse,
+    ChatCollection,
+    Chat
+)
 
 
 engine = create_engine(
@@ -24,9 +32,9 @@ def get_all_users(session: Session) -> list[UserInDB]:
 
     :return: ordered list of all users
     """
-    return session.get(UserInDB)
+    return session.exec(select(UserInDB)).all()
 
-def create_user(session: Session, user_to_add: UserInDB) -> UserInDB:
+def create_user(session: Session, user_to_add: UserCreate) -> UserInDB:
     """
     Create a new user in the database.
     
@@ -39,11 +47,14 @@ def create_user(session: Session, user_to_add: UserInDB) -> UserInDB:
     if user:
         raise EntityAlreadyExistsException(entity_name="UserInDB", entity_id=user_to_add.id)
     else:
-        session.add(user_to_add)
+        user = UserInDB(**user_to_add.model_dump())
+        
+        session.add(user)
         session.commit()
-        return user_to_add
+        session.refresh(user)
+        return User(id=user.id, username=user.username, email=user.email, created_at=user.created_at)
 
-def get_user(session: Session, user_id) -> UserInDB:
+def get_user(session: Session, user_id) -> UserResponse:
     """
     Grabs a user in the database.
     
@@ -53,9 +64,9 @@ def get_user(session: Session, user_id) -> UserInDB:
     """
     user = session.get(UserInDB, user_id)
     if user:
-        return user
+        return UserResponse(user=User(id=user.id, username=user.username, email=user.email, created_at=user.created_at))
     else:
-        raise EntityNotFoundException(entity_name="UserInDB", entity_id=user_id)
+        raise EntityNotFoundException(entity_name="User", entity_id=user_id)
 
     
 def get_user_chats(session: Session, user_id) -> list[ChatInDB]:
@@ -82,7 +93,7 @@ def get_chats(session: Session) -> list[ChatInDB]:
     """
     return session.get(ChatInDB)
 
-def get_chat_by_id(session: Session, chat_id) -> ChatInDB:
+def get_chat_by_id(session: Session, chat_id) -> Chat:
     """
     Grabs a chat from the DB with the given chat_id
     
@@ -92,7 +103,7 @@ def get_chat_by_id(session: Session, chat_id) -> ChatInDB:
     """
     chat = session.get(ChatInDB, chat_id)
     if chat:
-        return chat
+        return Chat(chat=chat)
     else:
         raise EntityNotFoundException(entity_name="ChatInDB", entity_id=chat_id)
 

@@ -1,9 +1,11 @@
+import datetime
 import pytest
 from fastapi.testclient import TestClient
 from sqlmodel import Session, SQLModel, StaticPool, create_engine
 
 from backend.main import app
 from backend import database as db
+from backend.schema import ChatInDB, UserInDB
 
 
 @pytest.fixture
@@ -28,3 +30,30 @@ def client(session):
     yield TestClient(app)
 
     app.dependency_overrides.clear()
+
+@pytest.fixture
+def default_users():
+    return [
+        UserInDB(
+            id=1,
+            username="Danny",
+            email="email1@gmail.com",
+            hashed_password="fjdkslafdas",
+            created_at=datetime.date.fromisoformat("2021-05-05")
+        ),
+        UserInDB(
+            id=2,
+            username="Ian",
+            email="email2@gmail.com",
+            hashed_password="fjdkslafdas",
+            created_at=datetime.date.fromisoformat("2021-05-05")
+        ),
+        UserInDB(
+            id=3,
+            username="Andy",
+            email="email3@gmail.com",
+            hashed_password="fjdkslafdas",
+            created_at=datetime.date.fromisoformat("2021-05-05")
+        )
+    ]
+

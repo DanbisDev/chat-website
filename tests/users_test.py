@@ -13,7 +13,7 @@ def test_get_all_users(client):
 
 def test_create_user(client):
     create_params = {
-        "id" : 123,
+        "id" : 11,
         "username": "Danny",
         "email": "deckergame.danny@gmail.com",
         "hashed_password": "fjdklsajtgeklsafdsa"
@@ -21,7 +21,7 @@ def test_create_user(client):
 
     response = client.post("/users", json=create_params)
     expected_response = {
-        "id": 123,
+        "id": 11,
         "username": "Danny",
         "email": "deckergame.danny@gmail.com",
         "created_at": response.json()['created_at']
