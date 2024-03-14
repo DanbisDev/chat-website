@@ -27,26 +27,31 @@ class UserCollection(BaseModel):
     """Represents an API response for a collection of users"""
 
     meta: Metadata
-    users: list[UserInDB]
+    users: list[User]
 
 class Chat(BaseModel):
     """Represetns a chatindb object"""
-    chat: ChatInDB
+    id: int
+    name: str
+    owner: User
+    created_at: datetime
+
 
 
 class ChatCollection(BaseModel):
     """Represents a collection of chat in db objects"""
     meta: Metadata
-    chats: list[ChatInDB]
+    chats: list[Chat]
 
 class ChatNameUpdate(BaseModel):
     """Represents a chat name update"""
     name: str
 
 class Message(BaseModel):
-    id: str
-    user_id: str
+    id: int
     text: str
+    chat_id: int
+    user: User
     created_at: datetime
 
 class MessageCollection(BaseModel):

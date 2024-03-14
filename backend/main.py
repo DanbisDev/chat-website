@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, HTMLResponse
 from backend.routers.users import users_router
 from backend.routers.chats import chats_router
+from backend.routers.auths import auth_router
 from backend.database import EntityNotFoundException
 from backend.database import EntityAlreadyExistsException
 from backend.database import create_db_and_tables
@@ -25,6 +26,7 @@ app = FastAPI(
 
 app.include_router(users_router)
 app.include_router(chats_router)
+app.include_router(auth_router)
 
 app.add_middleware(
     CORSMiddleware,

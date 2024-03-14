@@ -9,71 +9,86 @@ from backend.schema import ChatInDB, UserInDB
 
 client = TestClient(app)
 
-@pytest.fixture
-def default_chats():
-    return [
-        ChatInDB(
-            id=1,
-            name="Dannys Chat",
-            owner_id=1,
-            created_at=datetime.date.fromisoformat("2021-05-07"),
-            owner=UserInDB(
-                id=1,
-                username="Danny",
-                email="email1@gmail.com",
-                hashed_password="fjdkslafdas",
-                created_at=datetime.date.fromisoformat("2021-05-05")
-            ),
-            users=[
-                UserInDB(
-                id=1,
-                username="Danny",
-                email="email1@gmail.com",
-                hashed_password="fjdkslafdas",
-                created_at=datetime.date.fromisoformat("2021-05-05")
-                ),
-                UserInDB(
-                    id=2,
-                    username="Ian",
-                    email="email2@gmail.com",
-                    hashed_password="fjdkslafdas",
-                    created_at=datetime.date.fromisoformat("2021-05-05")
-                ),
-                UserInDB(
-                    id=3,
-                    username="Andy",
-                    email="email3@gmail.com",
-                    hashed_password="fjdkslafdas",
-                    created_at=datetime.date.fromisoformat("2021-05-05")
-                )
-            ],
-            messages=[]
-        )
-    ]
+def test_get_chats(client, default_data):
+    
+    
+    response = client.get("/chats")
 
-
-def test_create_user(client):
-    create_params = {
-        "id" : 123,
-        "username": "Danny",
-        "email": "deckergame.danny@gmail.com",
-        "hashed_password": "fjdklsajtgeklsafdsa"
-    } 
-
-    response = client.post("/users", json=create_params)
     expected_response = {
-        "id": 123,
-        "username": "Danny",
-        "email": "deckergame.danny@gmail.com",
-        "created_at": response.json()['created_at']
+        "meta": {
+            "count": 1
+        },
+        "chats": [
+            {
+                "id": 1,
+                "name": "Chat 1",
+                "owner": {
+                    "id": 1,
+                    "username": "danbis",
+                    "email": "danbis@gmail.com",
+                    "created_at": "2021-05-05T00:00:00"
+                },
+                "created_at": "2021-05-07T00:00:00"
+            }
+        ]
     }
-    assert response.json() == expected_response
-    assert response.status_code == 200
 
-# User Endpoint Tests
-def test_get_all_users(client):
-    response = client.get("/users")
+
     assert response.status_code == 200
+    assert response.json() == expected_response
+
+def test_get_messages(client, default_data):
+    response = client.get("/chats/1/messages")
+
+    expected_response = {
+        "meta": {
+            "count": 1
+        },
+        "messages": [
+            {
+            "id": 1,
+            "text": "hello world!",
+            "chat_id": 1,
+            "user": {
+                "id": 1,
+                "username": "danbis",
+                "email": "danbis@gmail.com",
+                "created_at": "2021-05-05T00:00:00"
+            },
+            "created_at": "2021-05-06T00:00:00"
+            }
+        ]
+    }
+
+    assert response.status_code == 200
+    assert response.json() == expected_response
+
+
+def test_get_chat_users(client, default_data):
+    response = client.get("/chats/1/users")
+
+    expected_response = {
+        "meta": {
+            "count": 2
+        },
+        "users": [
+            {
+                "id": 1,
+                "username": "danbis",
+                "email": "danbis@gmail.com",
+                "created_at": "2021-05-05T00:00:00"
+            },
+            {
+                "id": 2,
+                "username": "Dannith",
+                "email": "dannith@gmail.com",
+                "created_at": "2021-05-05T00:00:00"
+            }
+        ]
+    }
+
+    assert response.status_code == 200
+    assert response.json() == expected_response
 
 # def test_get_chat_id(client, default_chats):
 

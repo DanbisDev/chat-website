@@ -35,13 +35,6 @@ def update_chat_name(chat_id:int, new_name:ChatNameUpdate, session: Session = De
     """
     return db.update_chat_name(session, chat_id, new_name)
 
-@chats_router.delete("/{chat_id}", status_code = 204)
-def delete_chat_by_id(chat_id:int, session: Session = Depends(db.get_session)):
-    """
-    Delete Chat by ID
-    """
-    db.delete_chat_by_id(session, chat_id)
-
 
 @chats_router.get("/{chat_id}/messages", response_model=MessageCollection)
 def get_message_col_by_chat_id(chat_id:int, session: Session = Depends(db.get_session)):

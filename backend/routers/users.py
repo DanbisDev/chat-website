@@ -30,11 +30,6 @@ def get_users(session: Session = Depends(db.get_session)):
     )
 
 
-@users_router.post("", response_model=User)
-def create_user(user_create: UserCreate, session: Session = Depends(db.get_session)):
-    """Add a new user to the database"""
-    return db.create_user(session, user_create)
-
 
 @users_router.get("/{user_id}", response_model=UserResponse)
 def get_user(user_id: str, session: Session = Depends(db.get_session)):
@@ -42,6 +37,6 @@ def get_user(user_id: str, session: Session = Depends(db.get_session)):
     return db.get_user(session, user_id)
 
 @users_router.get("/{user_id}/chats", response_model=ChatCollection)
-def get_user_chats(user_id: int, session: Session = Depends(db.get_session)):
+def get_user_chats(user_id: str, session: Session = Depends(db.get_session)):
     """Get a list of all chats a given user has participated in"""
-    return db.get_user_chats(session, user_id)
+    return db.get_user_chats(session, int(user_id))

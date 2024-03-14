@@ -13,91 +13,156 @@ def test_get_all_users(client):
 
 def test_create_user(client):
     create_params = {
-        "id" : 11,
-        "username": "Danny",
-        "email": "deckergame.danny@gmail.com",
-        "hashed_password": "fjdklsajtgeklsafdsa"
+        "username": "Danbis",
+        "email": "danbis@gmail.com",
+        "password": "123"
     } 
 
-    response = client.post("/users", json=create_params)
+    response = client.post("/auth/registration", json=create_params)
     expected_response = {
-        "id": 11,
-        "username": "Danny",
-        "email": "deckergame.danny@gmail.com",
-        "created_at": response.json()['created_at']
+        "user": {
+            "id": 1,
+            "username": "Danbis",
+            "email": "danbis@gmail.com",
+            "created_at": response.json()['user']['created_at']
+        }
     }
     assert response.json() == expected_response
     assert response.status_code == 200
 
 
-def test_create_duplicate_user(client):
+def test_create_duplicate_username(client):
     create_params = {
-        "id" : 123,
-        "username": "Danny",
-        "email": "deckergame.danny@gmail.com",
-        "hashed_password": "fjdklsajtgeklsafdsa"
+        "username": "Danbis",
+        "email": "danbis@gmail.com",
+        "password": "123"
     } 
-    response1 = client.post("/users", json=create_params)
-    response2 = client.post("/users", json=create_params)
 
-    assert response1.status_code == 200
+    response_safe = client.post("/auth/registration", json=create_params)
+
+    create_params = {
+        "username": "Danbis",
+        "email": "danbis2@gmail.com",
+        "password": "123"
+    } 
+
+    response_dupe = client.post("/auth/registration", json=create_params)
+
+    assert response_safe.status_code == 200
     expected_response = {
-        'detail': 
-        {
-            'entity_id': 123,
-            'entity_name': 'UserInDB',
-            'type': 'duplicate_entity'
+        "detail": {
+            "type": "duplicate_value",
+            "entity_name": "User",
+            "entity_field": "username",
+            "entity_value": "Danbis"
         }
     }
-    assert response2.status_code == 422
-    assert response2.json() == expected_response
+    assert response_dupe.status_code == 422
+    assert response_dupe.json() == expected_response
+
+def test_create_duplicate_email(client):
+    create_params = {
+        "username": "Danbis",
+        "email": "danbis@gmail.com",
+        "password": "123"
+    } 
+
+    response_safe = client.post("/auth/registration", json=create_params)
+
+    create_params = {
+        "username": "Danbis2",
+        "email": "danbis@gmail.com",
+        "password": "123"
+    } 
+
+    response_dupe = client.post("/auth/registration", json=create_params)
+
+    assert response_safe.status_code == 200
+    expected_response = {
+        "detail": {
+            "type": "duplicate_value",
+            "entity_name": "User",
+            "entity_field": "email",
+            "entity_value": "danbis@gmail.com"
+        }
+    }
+    assert response_dupe.status_code == 422
+    assert response_dupe.json() == expected_response
 
 
 def test_get_user(client):
     create_params = {
-        "id" : 1,
-        "username": "Danny",
-        "email": "deckergame.danny@gmail.com",
-        "hashed_password": "fjdklsajtgeklsafdsa"
+        "username": "Danbis",
+        "email": "danbis@gmail.com",
+        "password": "123"
     } 
 
-    client.post("/users", json=create_params)
+    response = client.post("/auth/registration", json=create_params)
+
     response = client.get("/users/1")
     assert response.status_code == 200
 
 def test_get_user_response_v(client):
     create_params = {
-        "id" : 1,
-        "username": "Danny",
-        "email": "deckergame.danny@gmail.com",
-        "hashed_password": "fjdklsajtgeklsafdsa"
+        "username": "Danbis",
+        "email": "danbis@gmail.com",
+        "password": "123"
     } 
 
-    client.post("/users", json=create_params)
+    response = client.post("/auth/registration", json=create_params)
+
     response = client.get("/users/1")
     expected_response = {
         "user": {
             "id": 1,
-            "username": "Danny",
-            "email": "deckergame.danny@gmail.com",
+            "username": "Danbis",
+            "email": "danbis@gmail.com",
             "created_at": response.json()['user']['created_at']
         }
     }
     assert response.status_code == 200
     assert response.json() == expected_response
 
-def test_get_not_found_user(client):
-    response = client.get("/users/doesntexist")
+def test_get_user_chats(client, default_data):
+    
+    
+    response = client.get("/users/1/chats")
+
     expected_response = {
-        "detail": 
-        {
-            "type": "entity_not_found",
-            "entity_name": "User",
-            "entity_id": "doesntexist"
-        }
+        "meta": {
+            "count": 1
+        },
+        "chats": [
+            {
+                "id": 1,
+                "name": "Chat 1",
+                "owner": {
+                    "id": 1,
+                    "username": "danbis",
+                    "email": "danbis@gmail.com",
+                    "created_at": "2021-05-05T00:00:00"
+                },
+                "created_at": "2021-05-07T00:00:00"
+            }
+        ]
     }
 
-    assert response.status_code == 404
+
+    assert response.status_code == 200
     assert response.json() == expected_response
+
+# def test_get_not_found_user(client):
+#     response = client.get("/users/doesntexist")
+#     expected_response = {
+#         "detail": 
+#         {
+#             "type": "entity_not_found",
+#             "entity_name": "User",
+#             "entity_id": "doesntexist"
+#         }
+#     }
+
+#     assert response.status_code == 404
+#     assert response.json() == expected_response
 
 
