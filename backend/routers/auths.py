@@ -1,27 +1,28 @@
-import datetime
 import os
-import select
-from fastapi import APIRouter, Depends, HTTPException
-from fastapi.responses import JSONResponse
-from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
-from pydantic import ValidationError
-from sqlmodel import SQLModel, Session
-from backend import database as db
-from backend.auth import AccessToken, Claims, ExpiredToken, InvalidCredentials, InvalidToken, UserRegistration
-from backend.entities import User, UserResponse
-from passlib.context import CryptContext
-from backend.schema import UserInDB
-from jose import jwt, ExpiredSignatureError, JWTError
+from datetime import datetime, timezone
+from typing import Annotated
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/token")
-auth_router = APIRouter(prefix="/auth", tags=["Authentication"])
+from fastapi import APIRouter, Depends, HTTPException
+from fastapi.security import (
+    OAuth2PasswordBearer,
+    OAuth2PasswordRequestForm,
+)
+from jose import ExpiredSignatureError, JWTError, jwt
+from passlib.context import CryptContext
+from pydantic import BaseModel, ValidationError
+from sqlmodel import Session, SQLModel, select
+
+from backend import database as db
+from backend.entities import User, UserInDB, UserResponse
+
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 access_token_duration = 3600  # seconds
-jwt_key = os.environ.get(
-    "JWT_KEY", 
-    default="any string you want for a dev JWT key",
-)
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/token")
+jwt_key = os.environ.get("JWT_KEY", default="insecure-jwt-key-for-dev")
 jwt_alg = "HS256"
+
+auth_router = APIRouter(prefix="/auth", tags=["Authentication"])
+
 
 class UserRegistration(SQLModel):
     """Request model to register new user."""
@@ -30,11 +31,71 @@ class UserRegistration(SQLModel):
     email: str
     password: str
 
-@auth_router.post("/registration", response_model=UserResponse, status_code=201)
+
+class AccessToken(BaseModel):
+    """Response model for access token."""
+
+    access_token: str
+    token_type: str
+    expires_in: int
+
+
+class Claims(BaseModel):
+    """Access token claims (aka payload)."""
+
+    sub: str  # id of user
+    exp: int  # unix timestamp
+
+
+class AuthException(HTTPException):
+    def __init__(self, error: str, description: str):
+        super().__init__(
+            status_code=422,
+            detail={
+                "error": error,
+                "error_description": description,
+            },
+        )
+
+
+class InvalidCredentials(AuthException):
+    def __init__(self):
+        super().__init__(
+            error="invalid_client",
+            description="invalid username or password",
+        )
+
+
+class InvalidToken(AuthException):
+    def __init__(self):
+        super().__init__(
+            error="invalid_client",
+            description="invalid bearer token",
+        )
+
+
+class ExpiredToken(AuthException):
+    def __init__(self):
+        super().__init__(
+            error="invalid_client",
+            description="expired bearer token",
+        )
+
+
+def get_current_user(
+    session: Session = Depends(db.get_session),
+    token: str = Depends(oauth2_scheme),
+) -> UserInDB:
+    """FastAPI dependency to get current user from bearer token."""
+    user = _decode_access_token(session, token)
+    return user
+
+
+@auth_router.post("/registration", response_model=UserResponse, status_code = 201)
 def register_new_user(
     registration: UserRegistration,
     # session: Session = Depends(db.get_session),
-    session: Session = Depends(db.get_session),
+    session: Annotated[Session, Depends(db.get_session)],
 ):
     """Register new user."""
 
@@ -43,7 +104,6 @@ def register_new_user(
         **registration.model_dump(),
         hashed_password=hashed_password,
     )
-
     # if username already exists
     if db.get_user_by_username(session, registration.username):
         raise HTTPException(
@@ -58,7 +118,7 @@ def register_new_user(
 
     # if email aready exists
     if db.get_user_by_email(session, registration.email):
-                raise HTTPException(
+        raise HTTPException(
             status_code=422,
             detail = {
                 "type": "duplicate_value",
@@ -71,7 +131,8 @@ def register_new_user(
     session.add(user)
     session.commit()
     session.refresh(user)
-    return UserResponse(user=User(id=user.id, username=user.username, email=user.email, created_at=user.created_at))
+    return UserResponse(user = User(id=user.id, username = user.username, email = user.email, created_at = user.created_at))
+
 
 @auth_router.post("/token", response_model=AccessToken)
 def get_access_token(
@@ -82,6 +143,32 @@ def get_access_token(
 
     user = _get_authenticated_user(session, form)
     return _build_access_token(user)
+
+
+def _get_authenticated_user(
+    session: Session,
+    form: OAuth2PasswordRequestForm,
+) -> UserInDB:
+    user = session.exec(
+        select(UserInDB).where(UserInDB.username == form.username)
+    ).first()
+
+    if user is None or not pwd_context.verify(form.password, user.hashed_password):
+        raise InvalidCredentials()
+
+    return user
+
+
+def _build_access_token(user: UserInDB) -> AccessToken:
+    expiration = int(datetime.now(timezone.utc).timestamp()) + access_token_duration
+    claims = Claims(sub=str(user.id), exp=expiration)
+    access_token = jwt.encode(claims.model_dump(), key=jwt_key, algorithm=jwt_alg)
+
+    return AccessToken(
+        access_token=access_token,
+        token_type="Bearer",
+        expires_in=access_token_duration,
+    )
 
 
 def _decode_access_token(session: Session, token: str) -> UserInDB:
@@ -95,55 +182,9 @@ def _decode_access_token(session: Session, token: str) -> UserInDB:
             raise InvalidToken()
 
         return user
-    except jwt.ExpiredSignatureError:
+    except ExpiredSignatureError:
         raise ExpiredToken()
-    except JWTError():
+    except JWTError:
         raise InvalidToken()
     except ValidationError():
         raise InvalidToken()
-
-
-
-def get_current_user(session: Session = Depends(db.get_session), token: str = Depends(oauth2_scheme)) -> UserInDB:
-    """
-    Dependency to get the current user from the provided token.
-    """
-    # Verify token and get user from token
-    try:
-        user = _decode_access_token(session, token)
-        if user is None:
-            raise HTTPException(
-                status_code=401,
-                detail={
-                    "error": "invalid_token",
-                    "error_description": "Invalid or expired token"
-                },
-            )
-        return user
-    except InvalidCredentials:
-        raise InvalidCredentials
-        
-
-def _get_authenticated_user(
-    session: Session,
-    form: OAuth2PasswordRequestForm,
-) -> UserInDB:
-    user = db.get_user_by_username(session, form.username)
-
-    print(type(user))
-
-    if user is None or not pwd_context.verify(form.password, user.hashed_password):
-        raise InvalidCredentials()
-
-    return user
-
-def _build_access_token(user: UserInDB) -> AccessToken:
-    expiration = int(datetime.datetime.now(datetime.timezone.utc).timestamp()) + access_token_duration
-    claims = Claims(sub=str(user.id), exp=expiration)
-    access_token = jwt.encode(claims.model_dump(), key=jwt_key, algorithm=jwt_alg)
-
-    return AccessToken(
-        access_token=access_token,
-        token_type="Bearer",
-        expires_in=access_token_duration,
-    )

@@ -183,16 +183,15 @@ def test_get_token_user(client, default_data):
     assert response.json()["expires_in"] == 3600
 
 
-    def test_get_user_self(client, default_data):
-        """GET /users/me"""
-        auth_data = {
-            "username": "danbis",
-            "password": "123",
-        }
-        response = client.post("/auth/token", data=auth_data)
-        assert response.status_code == 200
-        token = response.json()["access_token"]
-    
-        response = client.get("/users/me", headers={"Authorization": f"Bearer {token}"})
-        assert response.status_code == 200
+def test_get_user_self(client, default_data):
+    """GET /users/me"""
+    auth_data = {
+        "username": "danbis",
+        "password": "123",
+    }
+    response = client.post("/auth/token", data=auth_data)
+    assert response.status_code == 200
+    token = response.json()["access_token"]
+
+    response = client.get("/users/me", headers={"Authorization": f"Bearer {token}"})
 

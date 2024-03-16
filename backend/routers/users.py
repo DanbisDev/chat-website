@@ -39,6 +39,6 @@ def get_user_chats(user_id: int, session: Session = Depends(db.get_session)):
 
 
 @users_router.get("/me", response_model=UserResponse)
-def get_me(user: UserInDB = Depends(get_current_user), session: Session = Depends(db.get_session)):
-    """Get a list of all chats a given user has participated in"""
-    return db.get_user(session, user.id)
+def get_self(user: UserInDB = Depends(get_current_user)):
+    """Get current user."""
+    return UserResponse(user=user)
