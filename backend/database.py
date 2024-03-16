@@ -170,7 +170,7 @@ def get_chat_by_id(session: Session, chat_id, include_messages, include_chats) -
     chat = session.get(ChatInDB, chat_id)
     if chat:
         chat_meta = ChatMeta(
-            message_count=len(chat.messages),
+            message_count=0,#len(chat.messages),
             user_count=len(chat.users)
         )
         chat_response = ChatResponse(
