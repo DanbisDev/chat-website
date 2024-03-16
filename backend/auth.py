@@ -31,9 +31,9 @@ class AccessToken(BaseModel):
     expires_in: int
 
 class AuthException(HTTPException):
-    def __init__(self, error: str, description: str):
+    def __init__(self, error: str, description: str, status_code: int):
         super().__init__(
-            status_code=422,
+            status_code=status_code,
             detail={
                 "error": error,
                 "error_description": description,
@@ -45,6 +45,7 @@ class InvalidCredentials(AuthException):
         super().__init__(
             error="invalid_client",
             description="invalid username or password",
+            status_code = 422
         )
 
 
@@ -53,6 +54,7 @@ class InvalidToken(AuthException):
         super().__init__(
             error="invalid_client",
             description="invalid bearer token",
+            status_code = 422
         )
 
 
@@ -61,4 +63,5 @@ class ExpiredToken(AuthException):
         super().__init__(
             error="invalid_client",
             description="expired bearer token",
+            status_code = 422
         )

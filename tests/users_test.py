@@ -1,5 +1,6 @@
 from datetime import datetime
 from fastapi.testclient import TestClient
+import jwt
 
 from backend.main import app
 
@@ -168,18 +169,6 @@ def test_get_token_non_user(client, default_data):
     response = client.post("/auth/token", data=auth_data)
     assert response.json() == expected_response
     assert response.status_code == 422
-# def test_get_not_found_user(client):
-#     response = client.get("/users/doesntexist")
-#     expected_response = {
-#         "detail": 
-#         {
-#             "type": "entity_not_found",
-#             "entity_name": "User",
-#             "entity_id": "doesntexist"
-#         }
-#     }
 
-#     assert response.status_code == 404
-#     assert response.json() == expected_response
 
 

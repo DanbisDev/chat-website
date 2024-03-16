@@ -133,7 +133,11 @@ def get_user_by_email(session: Session, email) -> UserInDB:
     """
     Grabs a userindb based on the email passed in
     """
-    return session.exec(select(UserInDB.email == email)).first()
+    statement = select(UserInDB).where(
+        UserInDB.email == email
+    )
+
+    return session.exec(statement).first()
 
 def get_chats(session: Session) -> ChatCollection:
     """
