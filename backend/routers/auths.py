@@ -69,6 +69,7 @@ class InvalidCredentials(AuthException):
 class InvalidToken(AuthException):
     def __init__(self):
         super().__init__(
+            status_code = 401,
             error="invalid_client",
             description="invalid bearer token",
         )
