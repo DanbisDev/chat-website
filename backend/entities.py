@@ -34,26 +34,29 @@ class UserCollection(BaseModel):
     users: list[User]
 
 class Chat(BaseModel):
-    """Represetns a chatindb object"""
     id: int
     name: str
     owner: User
     created_at: datetime
 
-class UserChatCollection(BaseModel):
+
+class ChatResponse(BaseModel):
+    """Represetns a chatindb object"""
+    chat: Chat
+
+class ChatCollection(BaseModel):
     meta: Metadata
     chats: list[Chat]
+
+class UserChatCollection(BaseModel):
+    meta: Metadata
+    chats: list[ChatResponse]
 
 
 class ChatMeta(BaseModel):
     message_count: int
     user_count: int
 
-class ChatResponse(BaseModel):
-    id: int
-    name: str
-    owner: User
-    created_at: datetime
 
 class Message(BaseModel):
     id: int
@@ -63,10 +66,10 @@ class Message(BaseModel):
     user: User
 
 
-class ChatCollection(BaseModel):
+class ChatDeepData(BaseModel):
     """Represents a collection of chat in db objects"""
     meta: ChatMeta
-    chat: ChatResponse
+    chat: Chat
     messages: Optional[list[Message]] = None
     users: Optional[list[User]] = None
 

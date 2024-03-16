@@ -76,7 +76,7 @@ def get_user(session: Session, user_id) -> UserResponse:
         raise EntityNotFoundException(entity_name="User", entity_id=user_id)
 
     
-def get_user_chats(session: Session, user_id) -> UserChatCollection:
+def get_user_chats(session: Session, user_id) -> ChatCollection:
     """
     Grabs a list of all chats a user is in
     
@@ -91,17 +91,9 @@ def get_user_chats(session: Session, user_id) -> UserChatCollection:
         chats = []
         for chat in user.chats:
             owner_userindb = session.get(UserInDB, chat.owner.id)
-            chats.append(Chat(id=chat.id,
-                              name=chat.name, 
-                              owner = User(
-                                  id=owner_userindb.id,
-                                  username=owner_userindb.username,
-                                  email=owner_userindb.email,
-                                  created_at=owner_userindb.created_at
-                              ), 
-                              created_at=str(chat.created_at)))
-
-        return UserChatCollection(
+            chats.append(Chat(owner = User(**owner_userindb.model_dump()), 
+                              **chat.model_dump()))
+        return ChatCollection(
             meta=Metadata(count = len (user.chats)),
             chats=chats
         )
@@ -159,7 +151,7 @@ def get_chats(session: Session) -> ChatCollection:
         chats=chats
     )
 
-def get_chat_by_id(session: Session, chat_id, include_messages, include_users) -> ChatCollection:
+def get_chat_by_id(session: Session, chat_id, include_messages, include_users) -> ChatDeepData:
     """
     Grabs a chat from the DB with the given chat_id
     
@@ -173,14 +165,14 @@ def get_chat_by_id(session: Session, chat_id, include_messages, include_users) -
             message_count=len(chat.messages),
             user_count=len(chat.users)
         )
-        chat_response = ChatResponse(
+        chat_response = Chat(
             id=chat.id,
             name=chat.name,
             owner=User(**chat.owner.model_dump()),
             created_at=chat.created_at
         )
 
-        CC = ChatCollection(meta = chat_meta, chat = chat_response)
+        CC = ChatDeepData(meta = chat_meta, chat = chat_response)
 
         message_list = None
         user_list = None

@@ -10,6 +10,14 @@ from backend.schema import ChatInDB, UserInDB
 client = TestClient(app)
 
 
+def test_get_chats(client, default_data):
+    """GET /chats"""
+    response = client.get("/chats")
+
+    assert response.status_code == 200
+
+
+
 def test_get_skynet_chat(client, default_data):
     """GET /chats/1"""
     response = client.get("/chats/1?include=users")

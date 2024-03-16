@@ -36,7 +36,7 @@ def get_chat_by_id(
 
     return response_data
 
-@chats_router.put("/{chat_id}", response_model=Chat)
+@chats_router.put("/{chat_id}", response_model=ChatResponse)
 def update_chat_name(chat_id:int, new_name:ChatNameUpdate, session: Session = Depends(db.get_session)):
     """
     Update Chat Name by ID
