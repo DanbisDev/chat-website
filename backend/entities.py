@@ -20,6 +20,10 @@ class User(BaseModel):
     email: str
     created_at: datetime
 
+class UpdateUserData(BaseModel):
+    username: str = None
+    email: str = None
+
 class UserResponse(BaseModel):
     user: User
 

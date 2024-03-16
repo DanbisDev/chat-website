@@ -80,7 +80,7 @@ def test_get_chat_users(client, default_data):
             },
             {
                 "id": 2,
-                "username": "Dannith",
+                "username": "sarah",
                 "email": "dannith@gmail.com",
                 "created_at": "2021-05-05T00:00:00"
             }

@@ -56,9 +56,9 @@ def default_data(session):
     
     user2 = UserInDB(
         id=2,
-        username= "Dannith",
+        username= "sarah",
         email="dannith@gmail.com",
-        hashed_password=pwd_context.hash('123'),
+        hashed_password=pwd_context.hash('sarahpassword'),
         created_at = datetime.date.fromisoformat("2021-05-05")
     )
 

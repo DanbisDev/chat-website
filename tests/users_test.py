@@ -196,4 +196,19 @@ def test_get_user_self(client, default_data):
     response = client.get("/users/me", headers={"Authorization": f"Bearer {token}"})
     assert response.status_code == 200
 
+def test_update_own_username(client, default_data):
+    """PUT /users/me"""
+    auth_data = {
+        "username": "sarah",
+        "password": "sarahpassword",
+    }
+    response = client.post("/auth/token", data=auth_data)
+    assert response.status_code == 200
+    token = response.json()["access_token"]
 
+    response = client.put(
+        "/users/me",
+        headers={"Authorization": f"Bearer {token}"},
+        json={"username": "sarah_updated"},
+    )
+    assert response.status_code == 200
