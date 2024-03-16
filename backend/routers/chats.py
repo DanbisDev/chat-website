@@ -15,13 +15,26 @@ def get_chats(session: Session = Depends(db.get_session)):
     """
     return db.get_chats(session)
 
-@chats_router.get("/{chat_id}", response_model=ChatCollection)
+@chats_router.get("/{chat_id}")
 def get_chat_by_id(
     chat_id: int,
     include: list[str] = Query([]),
     session: Session = Depends(db.get_session)
 ):
-    return db.get_chat_by_id(session, chat_id, "messages" in include, "users" in include)
+    data = db.get_chat_by_id(session, chat_id, "messages" in include, "users" in include)
+
+    response_data = {
+        "meta": data.meta,
+        "chat": data.chat
+    }
+
+    if "messages" in include and data.messages is not None:
+        response_data["messages"] = data.messages
+
+    if "users" in include and data.users is not None:
+        response_data["users"] = data.users
+
+    return response_data
 
 @chats_router.put("/{chat_id}", response_model=Chat)
 def update_chat_name(chat_id:int, new_name:ChatNameUpdate, session: Session = Depends(db.get_session)):

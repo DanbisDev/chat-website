@@ -67,8 +67,8 @@ class ChatCollection(BaseModel):
     """Represents a collection of chat in db objects"""
     meta: ChatMeta
     chat: ChatResponse
-    messages: list[Message] = None
-    users: list[User] = None
+    messages: Optional[list[Message]] = None
+    users: Optional[list[User]] = None
 
 class ChatNameUpdate(BaseModel):
     """Represents a chat name update"""
