@@ -16,7 +16,10 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/token")
 auth_router = APIRouter(prefix="/auth", tags=["Authentication"])
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 access_token_duration = 3600  # seconds
-jwt_key = os.environ.get("JWT_KEY")
+jwt_key = os.environ.get(
+    "JWT_KEY", 
+    default="any string you want for a dev JWT key",
+)
 jwt_alg = "HS256"
 
 class UserRegistration(SQLModel):
