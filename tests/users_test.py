@@ -28,7 +28,7 @@ def test_create_user(client):
         }
     }
     assert response.json() == expected_response
-    assert response.status_code == 200
+    assert response.status_code == 201
 
 
 def test_create_duplicate_username(client):
@@ -48,7 +48,7 @@ def test_create_duplicate_username(client):
 
     response_dupe = client.post("/auth/registration", json=create_params)
 
-    assert response_safe.status_code == 200
+    assert response_safe.status_code == 201
     expected_response = {
         "detail": {
             "type": "duplicate_value",
@@ -77,7 +77,7 @@ def test_create_duplicate_email(client):
 
     response_dupe = client.post("/auth/registration", json=create_params)
 
-    assert response_safe.status_code == 200
+    assert response_safe.status_code == 201
     expected_response = {
         "detail": {
             "type": "duplicate_value",
