@@ -71,18 +71,16 @@ def default_data(session):
     )
 
     user_chat_link1 = UserChatLinkInDB(user_id=1, chat_id=chat1.id)
-    user_chat_link2 = UserChatLinkInDB(user_id=2, chat_id=chat1.id)
-    user_chat_link3 = UserChatLinkInDB(user_id=3, chat_id=chat1.id)
     
     # Add created entities to session
-    session.add_all([user1, user2, chat1, user_chat_link1, user_chat_link2, user_chat_link3, message1])
+    session.add_all([user1, user2, chat1, user_chat_link1, message1])
     session.commit()
     
     # Return created entities
     return {
         "users": [user1, user2],
         "chats": [chat1],
-        "user_chat_links": [user_chat_link1, user_chat_link2, user_chat_link3],
+        "user_chat_links": [user_chat_link1],
         "messages": [message1]
     }
 

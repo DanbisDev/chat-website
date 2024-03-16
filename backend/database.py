@@ -71,7 +71,7 @@ def get_user(session: Session, user_id) -> UserResponse:
     """
     user = session.get(UserInDB, user_id)
     if user:
-        return UserResponse(user=User(id=user.id, username=user.username, email=user.email, created_at=user.created_at))
+        return UserResponse(user=User(**user.model_dump()))
     else:
         raise EntityNotFoundException(entity_name="User", entity_id=user_id)
 

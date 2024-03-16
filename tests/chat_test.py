@@ -19,3 +19,45 @@ def test_get_skynet_chat(client, default_data):
     assert "chat" in response.json() 
     assert "users" in response.json() 
     assert "meta" in response.json()
+
+    expected_response = {
+    "meta": {
+        "message_count": 1,
+        "user_count": 1
+    },
+    "chat": {
+        "id": 1,
+        "name": "Chat 1",
+        "owner": {
+            "id": 1,
+            "username": "danbis",
+            "email": "danbis@gmail.com",
+            "created_at": "2021-05-05T00:00:00"
+        },
+        "created_at": "2021-05-07T00:00:00"
+    },
+    "messages": [
+        {
+        "id": 1,
+        "text": "hello world!",
+        "chat_id": 1,
+        "user": {
+            "id": 1,
+            "username": "danbis",
+            "email": "danbis@gmail.com",
+            "created_at": "2021-05-05T00:00:00"
+        },
+        "created_at": "2021-05-06T00:00:00"
+        }
+    ],
+    "users": [
+        {
+            "id": 1,
+            "username": "danbis",
+            "email": "danbis@gmail.com",
+            "created_at": "2021-05-05T00:00:00"
+        }
+    ]
+    }
+
+    assert response.json() == expected_response
