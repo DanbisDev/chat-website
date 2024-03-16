@@ -29,13 +29,27 @@ def get_session():
     with Session(engine) as session:
         yield session
 
-def get_all_users(session: Session) -> list[UserInDB]:
+def get_all_users(session: Session) -> UserCollection:
     """
     Retrieve all users from the database
 
     :return: ordered list of all users
     """
-    return session.exec(select(UserInDB)).all()
+    users_in_db = session.exec(select(UserInDB)).all()
+
+    users = []
+    for user_ndb in users_in_db:
+        users.append(User(
+            id = user_ndb.id,
+            username = user_ndb.username,
+            email = user_ndb.email,
+            created_at = user_ndb.created_at
+        ))
+
+    return UserCollection(
+        meta = Metadata(count = len(users)),
+        users = users
+    )
 
 def create_user(session: Session, user_to_add: UserCreate) -> UserInDB:
     """

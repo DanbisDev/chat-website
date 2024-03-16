@@ -80,18 +80,26 @@ def get_access_token(
     return _build_access_token(user)
 
 
-def verify_token(token: str, session: Session) -> UserInDB:
+def verify_token(token: str, session: Session) -> UserInDB:   
     try:
         payload = jwt.decode(token, jwt_key, algorithms=[jwt_alg])
-        user_id: str = payload.get("sub")
+        user_id = payload.get("sub")
+        user = session.get(UserInDB, user_id)
         if user_id is None:
-            raise HTTPException(status_code=401, detail="Invalid token")
-        user = db.get_user_by_id(session, user_id)
+            raise HTTPException(status_code=401, detail="Invalid token: User ID missing")
+        
+        user = session.get(UserInDB, user_id)
         if user is None:
             raise HTTPException(status_code=401, detail="User not found")
+        
         return user
-    except jwt.JWTError:
+    except jwt.ExpiredSignatureError:
+        raise HTTPException(status_code=401, detail="Token has expired")
+    except jwt.InvalidTokenError:
         raise HTTPException(status_code=401, detail="Invalid token")
+    except Exception as e:
+        # Catch any unexpected errors during token verification
+        raise HTTPException(status_code=500, detail="Internal server error") from e
 
 
 def get_current_user(session: Session = Depends(db.get_session), token: str = Depends(oauth2_scheme)) -> UserInDB:
@@ -106,7 +114,7 @@ def get_current_user(session: Session = Depends(db.get_session), token: str = De
             detail="Invalid or expired token",
             headers={"WWW-Authenticate": "Bearer"},
         )
-    return user
+    return UserInDB()
 
 
 

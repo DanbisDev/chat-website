@@ -2,7 +2,7 @@ import datetime
 import pytest
 from fastapi.testclient import TestClient
 from sqlmodel import Session, SQLModel, StaticPool, create_engine
-
+from typing import Optional
 from backend import auth
 from backend.routers import auths
 from backend.main import app

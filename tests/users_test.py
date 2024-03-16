@@ -7,7 +7,7 @@ client = TestClient(app)
 
 
 # User Endpoint Tests
-def test_get_all_users(client):
+def test_get_all_users(client, default_data):
     response = client.get("/users")
     assert response.status_code == 200
 
