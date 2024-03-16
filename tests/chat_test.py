@@ -22,7 +22,7 @@ def test_get_skynet_chat(client, default_data):
 
     expected_response = {
     "meta": {
-        "message_count": 1,
+        "message_count": 2,
         "user_count": 2
     },
     "chat": {
@@ -46,6 +46,18 @@ def test_get_skynet_chat(client, default_data):
             "id": 1,
             "username": "danbis",
             "email": "danbis@gmail.com",
+            "created_at": "2021-05-05T00:00:00"
+        },
+        },
+        {
+        "chat_id": 1,
+        "created_at": "2021-05-06T00:00:00",
+        "id": 2,
+        "text": "Lame",
+        "user": {
+            "id": 2,
+            "username": "sarah",
+            "email": "dannith@gmail.com",
             "created_at": "2021-05-05T00:00:00"
         },
         }

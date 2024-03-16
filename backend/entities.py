@@ -56,9 +56,9 @@ class ChatResponse(BaseModel):
     created_at: datetime
 
 class Message(BaseModel):
+    id: int
     chat_id: int
     created_at: datetime
-    id: int
     text: str
     user: User
 
@@ -67,8 +67,8 @@ class ChatCollection(BaseModel):
     """Represents a collection of chat in db objects"""
     meta: ChatMeta
     chat: ChatResponse
-    messages: list[Message]
-    users: list[User]
+    messages: list[Message] = None
+    users: list[User] = None
 
 class ChatNameUpdate(BaseModel):
     """Represents a chat name update"""

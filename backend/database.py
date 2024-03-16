@@ -170,31 +170,40 @@ def get_chat_by_id(session: Session, chat_id) -> ChatCollection:
     chat = session.get(ChatInDB, chat_id)
     if chat:
         chat_meta = ChatMeta(
-            message_count = len(chat.messages),
-            user_count = len(chat.users)
+            message_count=len(chat.messages),
+            user_count=len(chat.users)
         )
         chat_response = ChatResponse(
-            id = chat.id,
-            name = chat.name,
-            owner = User(**chat.owner.model_dump()),
-            created_at = chat.created_at
+            id=chat.id,
+            name=chat.name,
+            owner=User(**chat.owner.model_dump()),
+            created_at=chat.created_at
         )
-        message_list = []
-        for message in chat.messages:
-            message_list.append(Message(
-                user = User(**message.user.model_dump()),
-                **message.model_dump()
-                ))
-            
-        user_list = []
-        for user in chat.users:
-            user_list.append(User(**user.model_dump()))
         
+        # Initialize message_list and user_list
+        message_list = None
+        user_list = None
+
+        # Populate message_list if messages exist in chat
+        if chat.messages:
+            message_list = []
+            for message in chat.messages:
+                message_list.append(Message(
+                    user=User(**message.user.model_dump()),
+                    **message.model_dump()
+                ))
+
+        # Populate user_list if users exist in chat
+        if chat.users:
+            user_list = []
+            for user in chat.users:
+                user_list.append(User(**user.model_dump()))
+
         return ChatCollection(
             meta=chat_meta,
-            chat = chat_response,
-            messages = message_list,
-            users = user_list
+            chat=chat_response,
+            messages=message_list,
+            users=user_list
         )
     else:
         raise EntityNotFoundException(entity_name="Chat", entity_id=chat_id)

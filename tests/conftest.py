@@ -70,11 +70,19 @@ def default_data(session):
         created_at = datetime.date.fromisoformat("2021-05-06")
     )
 
+    message2 = MessageInDB(
+        id=2,
+        text="Lame",
+        user_id=2,
+        chat_id=1,
+        created_at = datetime.date.fromisoformat("2021-05-06")
+    )
+
     user_chat_link1 = UserChatLinkInDB(user_id=1, chat_id=chat1.id)
     user_chat_link2 = UserChatLinkInDB(user_id=2, chat_id=chat1.id)
     
     # Add created entities to session
-    session.add_all([user1, user2, chat1, user_chat_link1, user_chat_link2, message1])
+    session.add_all([user1, user2, chat1, user_chat_link1, user_chat_link2, message1, message2])
     session.commit()
     
     # Return created entities
