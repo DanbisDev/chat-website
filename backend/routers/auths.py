@@ -4,13 +4,14 @@ import select
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import JSONResponse
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+from pydantic import ValidationError
 from sqlmodel import SQLModel, Session
 from backend import database as db
-from backend.auth import AccessToken, Claims, InvalidCredentials, UserRegistration
+from backend.auth import AccessToken, Claims, ExpiredToken, InvalidCredentials, InvalidToken, UserRegistration
 from backend.entities import User, UserResponse
 from passlib.context import CryptContext
 from backend.schema import UserInDB
-import jwt
+from jose import jwt, ExpiredSignatureError, JWTError
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/token")
 auth_router = APIRouter(prefix="/auth", tags=["Authentication"])
@@ -83,28 +84,23 @@ def get_access_token(
     return _build_access_token(user)
 
 
-def verify_token(token: str, session: Session) -> UserInDB:
+def _decode_access_token(session: Session, token: str) -> UserInDB:
     try:
-        payload = jwt.decode(token, jwt_key, algorithms=[jwt_alg])
-        user_id = payload.get("sub")
-
-        if user_id is None:
-            raise HTTPException(status_code=401, detail="Invalid token: User ID missing")
-
+        claims_dict = jwt.decode(token, key=jwt_key, algorithms=[jwt_alg])
+        claims = Claims(**claims_dict)
+        user_id = claims.sub
         user = session.get(UserInDB, user_id)
 
         if user is None:
-            raise HTTPException(status_code=401, detail="User not found")
+            raise InvalidToken()
 
         return user
     except jwt.ExpiredSignatureError:
-        raise HTTPException(status_code=401, detail="Token has expired")
-    except jwt.InvalidTokenError:
-        raise HTTPException(status_code=401, detail="Invalid token")
-    except HTTPException:
-        raise  # Re-raise HTTPException to avoid catching other HTTP-related exceptions
-    except Exception as e:
-        raise HTTPException(status_code=500, detail="Internal server error") from e
+        raise ExpiredToken()
+    except JWTError():
+        raise InvalidToken()
+    except ValidationError():
+        raise InvalidToken()
 
 
 
@@ -114,7 +110,7 @@ def get_current_user(session: Session = Depends(db.get_session), token: str = De
     """
     # Verify token and get user from token
     try:
-        user = verify_token(token, session)
+        user = _decode_access_token(session, token)
         if user is None:
             raise HTTPException(
                 status_code=401,
