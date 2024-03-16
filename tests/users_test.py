@@ -194,4 +194,6 @@ def test_get_user_self(client, default_data):
     token = response.json()["access_token"]
 
     response = client.get("/users/me", headers={"Authorization": f"Bearer {token}"})
+    assert response.status_code == 200
+
 
