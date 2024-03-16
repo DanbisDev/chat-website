@@ -159,7 +159,7 @@ def get_chats(session: Session) -> ChatCollection:
         chats=chats
     )
 
-def get_chat_by_id(session: Session, chat_id) -> ChatCollection:
+def get_chat_by_id(session: Session, chat_id, include_messages, include_chats) -> ChatCollection:
     """
     Grabs a chat from the DB with the given chat_id
     
@@ -180,12 +180,10 @@ def get_chat_by_id(session: Session, chat_id) -> ChatCollection:
             created_at=chat.created_at
         )
         
-        # Initialize message_list and user_list
         message_list = None
         user_list = None
 
-        # Populate message_list if messages exist in chat
-        if chat.messages:
+        if chat.messages and include_messages:
             message_list = []
             for message in chat.messages:
                 message_list.append(Message(
@@ -193,8 +191,7 @@ def get_chat_by_id(session: Session, chat_id) -> ChatCollection:
                     **message.model_dump()
                 ))
 
-        # Populate user_list if users exist in chat
-        if chat.users:
+        if chat.users and include_chats:
             user_list = []
             for user in chat.users:
                 user_list.append(User(**user.model_dump()))

@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query
 from fastapi.responses import JSONResponse
 from sqlmodel import Session
 from backend import database as db
@@ -16,11 +16,13 @@ def get_chats(session: Session = Depends(db.get_session)):
     return db.get_chats(session)
 
 @chats_router.get("/{chat_id}", response_model=ChatCollection)
-def get_chat_by_id(chat_id: int, session: Session = Depends(db.get_session)):
-    """
-    Get Chat by ID
-    """
-    return db.get_chat_by_id(session, chat_id)
+def get_chat_by_id(
+    chat_id: int,
+    include_messages: bool = Query(True),
+    include_users: bool = Query(True),
+    session: Session = Depends(db.get_session)
+):
+        return db.get_chat_by_id(session, chat_id, include_messages, include_users)
 
 @chats_router.put("/{chat_id}", response_model=Chat)
 def update_chat_name(chat_id:int, new_name:ChatNameUpdate, session: Session = Depends(db.get_session)):
