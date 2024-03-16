@@ -151,6 +151,23 @@ def test_get_user_chats(client, default_data):
     assert response.status_code == 200
     assert response.json() == expected_response
 
+def test_get_token_non_user(client, default_data):
+    """POST /auth/token"""
+    auth_data = {
+        "username": "test",
+        "password": "test123",
+    }
+
+    expected_response = {
+        "detail": {
+            "error": "invalid_client",
+            "error_description": "invalid username or password"
+        }
+    }
+
+    response = client.post("/auth/token", data=auth_data)
+    assert response.json() == expected_response
+    assert response.status_code == 422
 # def test_get_not_found_user(client):
 #     response = client.get("/users/doesntexist")
 #     expected_response = {

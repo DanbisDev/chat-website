@@ -47,7 +47,7 @@ def default_data(session):
         id=1,
         username= "danbis",
         email="danbis@gmail.com",
-        hashed_password="21315r",
+        hashed_password="",
         created_at = datetime.date.fromisoformat("2021-05-05")
     )
     

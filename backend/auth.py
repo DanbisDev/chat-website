@@ -33,7 +33,7 @@ class AccessToken(BaseModel):
 class AuthException(HTTPException):
     def __init__(self, error: str, description: str):
         super().__init__(
-            status_code=401,
+            status_code=422,
             detail={
                 "error": error,
                 "error_description": description,

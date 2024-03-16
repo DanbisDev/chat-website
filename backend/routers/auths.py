@@ -110,33 +110,28 @@ def get_current_user(session: Session = Depends(db.get_session), token: str = De
     Dependency to get the current user from the provided token.
     """
     # Verify token and get user from token
-    user = verify_token(token, session)
-    if user is None:
-        raise HTTPException(
-            status_code=401,
-            detail="Invalid or expired token",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-    return UserInDB()
-
-
-
-
-
-
-
-
-
-
-
+    try:
+        user = verify_token(token, session)
+        if user is None:
+            raise HTTPException(
+                status_code=401,
+                detail={
+                    "error": "invalid_token",
+                    "error_description": "Invalid or expired token"
+                },
+            )
+        return user
+    except InvalidCredentials:
+        raise InvalidCredentials
+        
 
 def _get_authenticated_user(
     session: Session,
     form: OAuth2PasswordRequestForm,
 ) -> UserInDB:
-    user = session.exec(
-        select(UserInDB).where(UserInDB.username == form.username)
-    ).first()
+    user = db.get_user_by_username(session, form.username)
+
+    print(type(user))
 
     if user is None or not pwd_context.verify(form.password, user.hashed_password):
         raise InvalidCredentials()

@@ -123,7 +123,11 @@ def get_user_by_username(session: Session, username) -> UserInDB:
     """
     Grabs a userindb based on the username passed in
     """
-    return session.exec(select(UserInDB.username == username)).first()
+    statement = select(UserInDB).where(
+        UserInDB.username == username
+    )
+
+    return session.exec(statement).first()
 
 def get_user_by_email(session: Session, email) -> UserInDB:
     """
