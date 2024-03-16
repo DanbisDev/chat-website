@@ -56,11 +56,12 @@ class ChatResponse(BaseModel):
     created_at: datetime
 
 class Message(BaseModel):
+    chat_id: int
+    created_at: datetime
     id: int
     text: str
-    chat_id: int
     user: User
-    created_at: datetime
+
 
 class ChatCollection(BaseModel):
     """Represents a collection of chat in db objects"""
