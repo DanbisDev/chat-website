@@ -12,7 +12,7 @@ client = TestClient(app)
 
 def test_get_skynet_chat(client, default_data):
     """GET /chats/1"""
-    response = client.get("/chats/1")
+    response = client.get("/chats/1?include=users&include=messages")
 
     assert response.status_code == 200
     assert "messages" in response.json() 

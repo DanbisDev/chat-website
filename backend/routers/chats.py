@@ -18,11 +18,10 @@ def get_chats(session: Session = Depends(db.get_session)):
 @chats_router.get("/{chat_id}", response_model=ChatCollection)
 def get_chat_by_id(
     chat_id: int,
-    include_messages: bool = Query(True),
-    include_users: bool = Query(True),
+    include: list[str] = Query([]),
     session: Session = Depends(db.get_session)
 ):
-        return db.get_chat_by_id(session, chat_id, include_messages, include_users)
+    return db.get_chat_by_id(session, chat_id, "messages" in include, "users" in include)
 
 @chats_router.put("/{chat_id}", response_model=Chat)
 def update_chat_name(chat_id:int, new_name:ChatNameUpdate, session: Session = Depends(db.get_session)):

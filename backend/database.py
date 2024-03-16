@@ -159,7 +159,7 @@ def get_chats(session: Session) -> ChatCollection:
         chats=chats
     )
 
-def get_chat_by_id(session: Session, chat_id, include_messages, include_chats) -> ChatCollection:
+def get_chat_by_id(session: Session, chat_id, include_messages, include_users) -> ChatCollection:
     """
     Grabs a chat from the DB with the given chat_id
     
@@ -170,7 +170,7 @@ def get_chat_by_id(session: Session, chat_id, include_messages, include_chats) -
     chat = session.get(ChatInDB, chat_id)
     if chat:
         chat_meta = ChatMeta(
-            message_count=0,#len(chat.messages),
+            message_count=len(chat.messages),
             user_count=len(chat.users)
         )
         chat_response = ChatResponse(
@@ -179,7 +179,9 @@ def get_chat_by_id(session: Session, chat_id, include_messages, include_chats) -
             owner=User(**chat.owner.model_dump()),
             created_at=chat.created_at
         )
-        
+
+        CC = ChatCollection(meta = chat_meta, chat = chat_response)
+
         message_list = None
         user_list = None
 
@@ -190,18 +192,15 @@ def get_chat_by_id(session: Session, chat_id, include_messages, include_chats) -
                     user=User(**message.user.model_dump()),
                     **message.model_dump()
                 ))
+            CC.messages = message_list
 
-        if chat.users and include_chats:
+        if include_users and chat.users:
             user_list = []
             for user in chat.users:
                 user_list.append(User(**user.model_dump()))
+            CC.users = user_list
 
-        return ChatCollection(
-            meta=chat_meta,
-            chat=chat_response,
-            messages=message_list,
-            users=user_list
-        )
+        return CC
     else:
         raise EntityNotFoundException(entity_name="Chat", entity_id=chat_id)
 
