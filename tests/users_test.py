@@ -219,13 +219,10 @@ def test_update_own_username_bad_token(client, default_data):
         "username": "sarah",
         "password": "sarahpassword",
     }
-    response = client.post("/auth/token", data=auth_data)
-    assert response.status_code == 200
-    token = response.json()["access_token"].split('.')[2]
 
     response = client.put(
         "/users/me",
-        headers={"Authorization": f"Bearer {token}"},
+        headers={"Authorization": f"Bearer token"},
         json={"username": "sarah_updated"},
     )
-    assert response.status_code == 422
+    assert response.status_code == 401

@@ -48,9 +48,9 @@ class Claims(BaseModel):
 
 
 class AuthException(HTTPException):
-    def __init__(self, error: str, description: str):
+    def __init__(self, error: str, description: str, status_code):
         super().__init__(
-            status_code=422,
+            status_code=status_code,
             detail={
                 "error": error,
                 "error_description": description,
@@ -61,6 +61,7 @@ class AuthException(HTTPException):
 class InvalidCredentials(AuthException):
     def __init__(self):
         super().__init__(
+            status_code = 422,
             error="invalid_client",
             description="invalid username or password",
         )
@@ -69,6 +70,7 @@ class InvalidCredentials(AuthException):
 class InvalidToken(AuthException):
     def __init__(self):
         super().__init__(
+            status_code = 401,
             error="invalid_client",
             description="invalid bearer token",
         )
@@ -77,6 +79,7 @@ class InvalidToken(AuthException):
 class ExpiredToken(AuthException):
     def __init__(self):
         super().__init__(
+            status_code = 401,
             error="invalid_client",
             description="expired bearer token",
         )
