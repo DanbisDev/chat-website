@@ -72,7 +72,7 @@ class InvalidToken(AuthException):
         super().__init__(
             status_code = 401,
             error="invalid_client",
-            description="invalid bearer token",
+            description="invalid access token",
         )
 
 
