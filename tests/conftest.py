@@ -8,7 +8,10 @@ from backend.routers import auths
 from backend.main import app
 from backend import database as db
 from backend.schema import ChatInDB, MessageInDB, UserChatLinkInDB, UserInDB
+from passlib.context import CryptContext
 
+
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 @pytest.fixture
 def session():
@@ -47,7 +50,7 @@ def default_data(session):
         id=1,
         username= "danbis",
         email="danbis@gmail.com",
-        hashed_password="",
+        hashed_password=pwd_context.hash('123'),
         created_at = datetime.date.fromisoformat("2021-05-05")
     )
     
@@ -55,7 +58,7 @@ def default_data(session):
         id=2,
         username= "Dannith",
         email="dannith@gmail.com",
-        hashed_password="21315r",
+        hashed_password=pwd_context.hash('123'),
         created_at = datetime.date.fromisoformat("2021-05-05")
     )
 

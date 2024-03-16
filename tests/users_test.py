@@ -152,11 +152,11 @@ def test_get_user_chats(client, default_data):
     assert response.status_code == 200
     assert response.json() == expected_response
 
-def test_get_token_non_user(client, default_data):
+def test_get_token_invalid_user(client, default_data):
     """POST /auth/token"""
     auth_data = {
-        "username": "test",
-        "password": "test123",
+        "username": "danbis",
+        "password": "1234",
     }
 
     expected_response = {
@@ -170,5 +170,30 @@ def test_get_token_non_user(client, default_data):
     assert response.json() == expected_response
     assert response.status_code == 422
 
+def test_get_token_user(client, default_data):
+    auth_data = {
+        "username": "danbis",
+        "password": "123",
+    }
+    response = client.post("/auth/token", data=auth_data)
 
+    assert response.status_code == 200
+    assert "access_token" in response.json()
+    assert response.json()["token_type"] == "Bearer"
+    assert response.json()["expires_in"] == 3600
+
+# def test_get_me(client, default_data):
+
+
+#     auth_data = {
+#         "username": "danbis",
+#         "password": "123",
+#     }
+#     valid_token = client.post("/auth/token", data=auth_data).json()["access_token"]
+
+#     print(valid_token)
+
+#     response = client.get("/users/me", headers={"Authorization": f"Bearer {valid_token}"})
+
+#     assert response.status_code == 200
 
