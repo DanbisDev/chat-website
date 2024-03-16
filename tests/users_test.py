@@ -168,7 +168,7 @@ def test_get_token_invalid_user(client, default_data):
 
     response = client.post("/auth/token", data=auth_data)
     assert response.json() == expected_response
-    assert response.status_code == 422
+    assert response.status_code == 401
 
 def test_get_token_user(client, default_data):
     auth_data = {

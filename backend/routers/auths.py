@@ -61,7 +61,7 @@ class AuthException(HTTPException):
 class InvalidCredentials(AuthException):
     def __init__(self):
         super().__init__(
-            status_code = 422,
+            status_code = 401,
             error="invalid_client",
             description="invalid username or password",
         )
