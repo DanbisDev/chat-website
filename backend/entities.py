@@ -40,6 +40,11 @@ class Chat(BaseModel):
     owner: User
     created_at: datetime
 
+class UserChatCollection(BaseModel):
+    meta: Metadata
+    chats: list[Chat]
+
+
 class ChatMeta(BaseModel):
     message_count: int
     user_count: int

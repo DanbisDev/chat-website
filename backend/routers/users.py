@@ -51,7 +51,7 @@ def get_user(user_id: int, session: Session = Depends(db.get_session)):
     """Get new user data from the database"""
     return db.get_user(session, user_id)
 
-@users_router.get("/{user_id}/chats", response_model=ChatCollection)
+@users_router.get("/{user_id}/chats", response_model=UserChatCollection)
 def get_user_chats(user_id: int, session: Session = Depends(db.get_session)):
     """Get a list of all chats a given user has participated in"""
     return db.get_user_chats(session, user_id)

@@ -76,7 +76,7 @@ def get_user(session: Session, user_id) -> UserResponse:
         raise EntityNotFoundException(entity_name="User", entity_id=user_id)
 
     
-def get_user_chats(session: Session, user_id) -> ChatCollection:
+def get_user_chats(session: Session, user_id) -> UserChatCollection:
     """
     Grabs a list of all chats a user is in
     
@@ -101,7 +101,7 @@ def get_user_chats(session: Session, user_id) -> ChatCollection:
                               ), 
                               created_at=str(chat.created_at)))
 
-        return ChatCollection(
+        return UserChatCollection(
             meta=Metadata(count = len (user.chats)),
             chats=chats
         )
