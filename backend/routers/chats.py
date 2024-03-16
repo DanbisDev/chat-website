@@ -5,13 +5,7 @@ from backend import database as db
 
 chats_router = APIRouter(prefix="/chats", tags=["Chats"])
 
-from backend.entities import (
-    ChatNameUpdate,
-    Chat,
-    MessageCollection,
-    UserCollection
-)
-
+from backend.entities import *
 
 
 @chats_router.get("")
@@ -21,7 +15,7 @@ def get_chats(session: Session = Depends(db.get_session)):
     """
     return db.get_chats(session)
 
-@chats_router.get("/{chat_id}", response_model=Chat)
+@chats_router.get("/{chat_id}", response_model=ChatCollection)
 def get_chat_by_id(chat_id: int, session: Session = Depends(db.get_session)):
     """
     Get Chat by ID

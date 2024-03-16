@@ -3,17 +3,7 @@ from uuid import uuid4
 from sqlmodel import Session, SQLModel, create_engine, select
 from backend.schema import UserInDB, ChatInDB, MessageInDB, UserChatLinkInDB
 
-from backend.entities import (
-    Message,
-    MessageCollection,
-    Metadata,
-    UserCollection,
-    UserCreate,
-    User,
-    UserResponse,
-    ChatCollection,
-    Chat
-)
+from backend.entities import *
 
 
 engine = create_engine(
@@ -169,7 +159,7 @@ def get_chats(session: Session) -> ChatCollection:
         chats=chats
     )
 
-def get_chat_by_id(session: Session, chat_id) -> Chat:
+def get_chat_by_id(session: Session, chat_id) -> ChatCollection:
     """
     Grabs a chat from the DB with the given chat_id
     
@@ -179,9 +169,36 @@ def get_chat_by_id(session: Session, chat_id) -> Chat:
     """
     chat = session.get(ChatInDB, chat_id)
     if chat:
-        return Chat(chat=chat)
+        chat_meta = ChatMeta(
+            message_count = len(chat.messages),
+            user_count = len(chat.users)
+        )
+        chat_response = ChatResponse(
+            id = chat.id,
+            name = chat.name,
+            owner = User(**chat.owner.model_dump()),
+            created_at = chat.created_at
+        )
+        message_list = []
+        for message in chat.messages:
+            message_list.append(Message(
+                user = User(**message.user.model_dump()),
+                **message.model_dump()
+                ))
+            
+        user_list = []
+        for user in chat.users:
+            user_list.append(User(**user.model_dump()))
+        
+        return ChatCollection(
+            meta=chat_meta,
+            chat = chat_response,
+            messages = message_list,
+            users = user_list
+        )
     else:
-        raise EntityNotFoundException(entity_name="ChatInDB", entity_id=chat_id)
+        raise EntityNotFoundException(entity_name="Chat", entity_id=chat_id)
+
 
 def update_chat_name(session: Session,chat_id:str, new_name:str) -> ChatInDB:
     """

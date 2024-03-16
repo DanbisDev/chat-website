@@ -40,16 +40,15 @@ class Chat(BaseModel):
     owner: User
     created_at: datetime
 
+class ChatMeta(BaseModel):
+    message_count: int
+    user_count: int
 
-
-class ChatCollection(BaseModel):
-    """Represents a collection of chat in db objects"""
-    meta: Metadata
-    chats: list[Chat]
-
-class ChatNameUpdate(BaseModel):
-    """Represents a chat name update"""
+class ChatResponse(BaseModel):
+    id: int
     name: str
+    owner: User
+    created_at: datetime
 
 class Message(BaseModel):
     id: int
@@ -57,6 +56,19 @@ class Message(BaseModel):
     chat_id: int
     user: User
     created_at: datetime
+
+class ChatCollection(BaseModel):
+    """Represents a collection of chat in db objects"""
+    meta: ChatMeta
+    chat: ChatResponse
+    messages: list[Message]
+    users: list[User]
+
+class ChatNameUpdate(BaseModel):
+    """Represents a chat name update"""
+    name: str
+
+
 
 class MessageCollection(BaseModel):
     """Represents a collection of messages"""
