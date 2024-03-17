@@ -41,7 +41,7 @@ def update_chat_name(chat_id:int, new_name:ChatNameUpdate, session: Session = De
     """
     Update Chat Name by ID
     """
-    return db.update_chat_name(session, chat_id, new_name)
+    return db.update_chat_name(session, chat_id, new_name.name)
 
 
 @chats_router.get("/{chat_id}/messages", response_model=MessageCollection)
