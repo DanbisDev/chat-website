@@ -215,7 +215,10 @@ def update_chat_name(session: Session,chat_id:int, new_name:str) -> ChatResponse
 
     session.commit()
 
-    return ChatResponse(**chat.model_dump())
+    return ChatResponse(chat=Chat(
+        owner=User(**chat.owner.model_dump()),
+        **chat.model_dump())
+        )
     
 def delete_chat_by_id(session: Session, chat_id:str):
     """

@@ -18,6 +18,12 @@ def test_get_chats(client, default_data):
 
 
 
+def test_update_chat(client, default_data):
+        """PUT /chats/1"""
+        response = client.put("/chats/1", json={"name": "updated name"})
+
+        assert response.status_code == 200
+
 def test_get_skynet_chat(client, default_data):
     """GET /chats/1"""
     response = client.get("/chats/1?include=users")
