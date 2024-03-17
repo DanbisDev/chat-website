@@ -33,6 +33,9 @@ class UserCollection(BaseModel):
     meta: Metadata
     users: list[User]
 
+class NewMessage(BaseModel):
+    text: str
+
 class Chat(BaseModel):
     id: int
     name: str
@@ -65,6 +68,8 @@ class Message(BaseModel):
     text: str
     user: User
 
+class MessageResponse(BaseModel):
+    message: Message
 
 class ChatDeepData(BaseModel):
     """Represents a collection of chat in db objects"""

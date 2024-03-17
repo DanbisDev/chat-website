@@ -75,6 +75,32 @@ def get_user(session: Session, user_id) -> UserResponse:
     else:
         raise EntityNotFoundException(entity_name="User", entity_id=user_id)
 
+
+def new_message(session: Session, chat_id: int, text: str, user_id: int) -> MessageResponse:
+
+    chat_in_db = session.get(ChatInDB, chat_id)
+    user_in_db = session.get(UserInDB, user_id)
+
+    if chat_in_db is None:
+        raise EntityNotFoundException(entity_name="ChatInDB", entity_id=chat_id)
+
+    if user_in_db is None:
+        raise EntityNotFoundException(entity_name="UserInDB", entity_id=user_id)
+
+
+    message = MessageInDB(text = text,
+                          user_id = user_id, 
+                          chat_id = chat_id,
+                          created_at = datetime.now())
+    
+    session.add(message)
+    session.commit()
+    session.refresh(message)
+
+    return MessageResponse(message = Message(id = message.id, chat_id = message.chat_id,
+                                             created_at = message.created_at, text = message.text,
+                                             user = User(**message.user.model_dump())))
+
     
 def get_user_chats(session: Session, user_id) -> ChatCollection:
     """

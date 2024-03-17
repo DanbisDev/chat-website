@@ -1,6 +1,6 @@
-import datetime
-from fastapi.testclient import TestClient
 
+from fastapi.testclient import TestClient
+from datetime import datetime, timezone
 import pytest
 
 from datetime import date
@@ -66,3 +66,24 @@ def test_get_skynet_chat(client, default_data):
     }
 
     assert response.json() == expected_response
+
+
+
+def test_post_new_message(client, default_data):
+    """POST /chats/1/messages"""
+    auth_data = {
+        "username": "sarah",
+        "password": "sarahpassword",
+    }
+    response = client.post("/auth/token", data=auth_data)
+    assert response.status_code == 200
+    token = response.json()["access_token"]
+
+    current_timestamp = int(datetime.now().timestamp())
+
+    response = client.post(
+        "/chats/1/messages",
+        headers={"Authorization": f"Bearer {token}"},
+        json={"text": "new message"},
+    )
+    assert response.status_code == 201

@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, Query
 from fastapi.responses import JSONResponse
 from sqlmodel import Session
 from backend import database as db
+from backend.routers.auths import get_current_user
 
 chats_router = APIRouter(prefix="/chats", tags=["Chats"])
 
@@ -14,6 +15,15 @@ def get_chats(session: Session = Depends(db.get_session)):
     Get All Chats
     """
     return db.get_chats(session)
+
+@chats_router.post("/{chat_id}/messages", status_code = 201)
+def new_message_handler(
+    chat_id: int,
+    message: NewMessage,
+    session: Session = Depends(db.get_session),
+    current_user: UserInDB = Depends(get_current_user)
+) -> MessageResponse:
+    return db.new_message(session, chat_id, message.text, current_user.id)
 
 @chats_router.get("/{chat_id}")
 def get_chat_by_id(
