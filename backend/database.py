@@ -197,7 +197,7 @@ def get_chat_by_id(session: Session, chat_id, include_messages, include_users) -
         raise EntityNotFoundException(entity_name="Chat", entity_id=chat_id)
 
 
-def update_chat_name(session: Session,chat_id:str, new_name:str) -> ChatResponse:
+def update_chat_name(session: Session,chat_id:int, new_name:str) -> ChatResponse:
     """
     Updates the given chat id with the given new name
     
