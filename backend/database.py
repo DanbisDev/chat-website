@@ -1,34 +1,47 @@
-import json
 from datetime import datetime
 from uuid import uuid4
+from sqlmodel import Session, SQLModel, create_engine, select
+from backend.schema import UserInDB, ChatInDB, MessageInDB, UserChatLinkInDB
+
+from backend.entities import *
 
 
-from backend.entities import (
-    UserInDB,
-    UserCreate,
-    User,
-    UserCollection,
-    ChatCollection,
-    ChatInDB,
-    Chat,
-    ChatNameUpdate,
-    Message,
-    MessageCollection,
-    Metadata
+engine = create_engine(
+    "sqlite:///backend/pony_express.db",
+    echo=True,
+    connect_args={"check_same_thread": False}
 )
 
-with open("backend/fake_db.json", "r") as f:
-    DB = json.load(f)
+def create_db_and_tables():
+    SQLModel.metadata.create_all(engine)
 
-def get_all_users() -> list[UserInDB]:
+def get_session():
+    with Session(engine) as session:
+        yield session
+
+def get_all_users(session: Session) -> UserCollection:
     """
     Retrieve all users from the database
 
     :return: ordered list of all users
     """
-    return [UserInDB(**user_data) for user_data in DB["users"].values()]
+    users_in_db = session.exec(select(UserInDB)).all()
 
-def create_user(user_create: UserCreate) -> User:
+    users = []
+    for user_ndb in users_in_db:
+        users.append(User(
+            id = user_ndb.id,
+            username = user_ndb.username,
+            email = user_ndb.email,
+            created_at = user_ndb.created_at
+        ))
+
+    return UserCollection(
+        meta = Metadata(count = len(users)),
+        users = users
+    )
+
+def create_user(session: Session, user_to_add: UserCreate) -> UserInDB:
     """
     Create a new user in the database.
     
@@ -36,18 +49,19 @@ def create_user(user_create: UserCreate) -> User:
     :return: the newly created user
     :raises EntityAlreadyExistsException: if the user id already exists in the DB
     """
-    user = UserInDB(
-        created_at = datetime.now().isoformat(),
-        **user_create.model_dump()
-    )
 
-    if user.id in DB["users"]:
-        raise EntityAlreadyExistsException(entity_name="User", entity_id=user.id)
-    else:     
-        DB["users"][user.id] = user.model_dump()
-        return User(user=user)
+    user = session.get(UserInDB, user_to_add.id)
+    if user:
+        raise EntityAlreadyExistsException(entity_name="UserInDB", entity_id=user_to_add.id)
+    else:
+        user = UserInDB(**user_to_add.model_dump())
+        
+        session.add(user)
+        session.commit()
+        session.refresh(user)
+        return User(id=user.id, username=user.username, email=user.email, created_at=user.created_at)
 
-def get_user(user_id) -> User:
+def get_user(session: Session, user_id) -> UserResponse:
     """
     Grabs a user in the database.
     
@@ -55,12 +69,40 @@ def get_user(user_id) -> User:
     :return: the user specified
     :raises EntityNotFoundException: if the user doesn't exist in the DB
     """
-    if user_id in DB["users"]:
-        return User(user = UserInDB(**DB["users"][user_id]))
+    user = session.get(UserInDB, user_id)
+    if user:
+        return UserResponse(user=User(**user.model_dump()))
     else:
         raise EntityNotFoundException(entity_name="User", entity_id=user_id)
+
+
+def new_message(session: Session, chat_id: int, text: str, user_id: int) -> MessageResponse:
+
+    chat_in_db = session.get(ChatInDB, chat_id)
+    user_in_db = session.get(UserInDB, user_id)
+
+    if chat_in_db is None:
+        raise EntityNotFoundException(entity_name="ChatInDB", entity_id=chat_id)
+
+    if user_in_db is None:
+        raise EntityNotFoundException(entity_name="UserInDB", entity_id=user_id)
+
+
+    message = MessageInDB(text = text,
+                          user_id = user_id, 
+                          chat_id = chat_id,
+                          created_at = datetime.now())
     
-def get_user_chats(user_id) -> ChatCollection:
+    session.add(message)
+    session.commit()
+    session.refresh(message)
+
+    return MessageResponse(message = Message(id = message.id, chat_id = message.chat_id,
+                                             created_at = message.created_at, text = message.text,
+                                             user = User(**message.user.model_dump())))
+
+    
+def get_user_chats(session: Session, user_id) -> ChatCollection:
     """
     Grabs a list of all chats a user is in
     
@@ -68,29 +110,74 @@ def get_user_chats(user_id) -> ChatCollection:
     :return: A ChatCollection of chats the user is in
     :raises EntityNotFoundException: if the user doesn't exist in the DB
     """
-    if user_id not in DB["users"]:
-        raise EntityNotFoundException(entity_name="User", entity_id=user_id)
-    
-    chats = []
-    for chat in DB["chats"]:
-        if user_id in DB["chats"][chat]["user_ids"] and chat not in chats:
-            chats.append(DB["chats"][chat])
 
-    return ChatCollection(meta=Metadata(count=len(chats)), chats=sorted(chats, key=lambda x: x['name']))
 
-def get_chats() -> ChatCollection:
+    user = session.get(UserInDB, user_id)
+    if user:
+        chats = []
+        for chat in user.chats:
+            owner_userindb = session.get(UserInDB, chat.owner.id)
+            chats.append(Chat(owner = User(**owner_userindb.model_dump()), 
+                              **chat.model_dump()))
+        return ChatCollection(
+            meta=Metadata(count = len (user.chats)),
+            chats=chats
+        )
+        
+    else:
+        raise EntityNotFoundException(entity_name="UserInDB", entity_id=user_id)
+
+def get_user_by_username(session: Session, username) -> UserInDB:
+    """
+    Grabs a userindb based on the username passed in
+    """
+    statement = select(UserInDB).where(
+        UserInDB.username == username
+    )
+
+    return session.exec(statement).first()
+
+def get_user_by_email(session: Session, email) -> UserInDB:
+    """
+    Grabs a userindb based on the email passed in
+    """
+    statement = select(UserInDB).where(
+        UserInDB.email == email
+    )
+
+    return session.exec(statement).first()
+
+def get_chats(session: Session) -> ChatCollection:
     """
     Grabs all chats in the database
     
     :return: A ChatCollection of all chats in teh DB
     """
+    chatsindb = session.exec(select(ChatInDB)).all()
     chats = []
-    for chat in DB["chats"]:
-        chats.append(DB["chats"][chat])
-    
-    return ChatCollection(meta=Metadata(count=len(chats)), chats=sorted(chats, key=lambda x: x['name']))
+    for chat in chatsindb:
+        owner_userindb = session.get(UserInDB, chat.owner.id)
+        chats.append(Chat(
+            id=chat.id,
+            name=chat.name,
+            owner = User(
+                id=owner_userindb.id,
+                username=owner_userindb.username,
+                email=owner_userindb.email,
+                created_at=owner_userindb.created_at
+            ), 
+            created_at=chat.created_at
+        ))
 
-def get_chat_by_id(chat_id) -> Chat:
+
+    return ChatCollection(
+        meta=Metadata(
+            count = len(chats)
+        ),
+        chats=chats
+    )
+
+def get_chat_by_id(session: Session, chat_id, include_messages, include_users) -> ChatDeepData:
     """
     Grabs a chat from the DB with the given chat_id
     
@@ -98,19 +185,45 @@ def get_chat_by_id(chat_id) -> Chat:
     :return: A Chat with the given id
     :raises EntityNotFoundException: if the chat doesn't exist in the DB
     """
-    if chat_id in DB["chats"]:
-        chat = DB["chats"][chat_id]
-        return Chat(chat=ChatInDB(
-            id=chat_id,
-            name=chat["name"],
-            user_ids=chat["user_ids"],
-            owner_id=chat["owner_id"],
-            created_at=chat["created_at"]
-        ))
+    chat = session.get(ChatInDB, chat_id)
+    if chat:
+        chat_meta = ChatMeta(
+            message_count=len(chat.messages),
+            user_count=len(chat.users)
+        )
+        chat_response = Chat(
+            id=chat.id,
+            name=chat.name,
+            owner=User(**chat.owner.model_dump()),
+            created_at=chat.created_at
+        )
+
+        CC = ChatDeepData(meta = chat_meta, chat = chat_response)
+
+        message_list = None
+        user_list = None
+
+        if chat.messages and include_messages:
+            message_list = []
+            for message in chat.messages:
+                message_list.append(Message(
+                    user=User(**message.user.model_dump()),
+                    **message.model_dump()
+                ))
+            CC.messages = message_list
+
+        if include_users and chat.users:
+            user_list = []
+            for user in chat.users:
+                user_list.append(User(**user.model_dump()))
+            CC.users = user_list
+
+        return CC
     else:
         raise EntityNotFoundException(entity_name="Chat", entity_id=chat_id)
 
-def update_chat_name(chat_id:str, new_name:ChatNameUpdate) -> Chat:
+
+def update_chat_name(session: Session,chat_id:int, new_name:str) -> ChatResponse:
     """
     Updates the given chat id with the given new name
     
@@ -119,24 +232,36 @@ def update_chat_name(chat_id:str, new_name:ChatNameUpdate) -> Chat:
     :returns: A chat object with the updated name
     :raises EntityNotFoundException: if the chat doesn't exist in the DataBase
     """
-    chat = get_chat_by_id(chat_id)
-    chat.chat.name = new_name.name
-    DB["chats"][chat_id]["name"] = new_name.name
-    return chat
+    chat = session.get(ChatInDB, chat_id)
+
+    if chat is None:
+        raise EntityNotFoundException(entity_name="ChatInDB", entity_id=chat_id)
+
+    chat.name = new_name
+
+    session.commit()
+
+    return ChatResponse(chat=Chat(
+        owner=User(**chat.owner.model_dump()),
+        **chat.model_dump())
+        )
     
-def delete_chat_by_id(chat_id:str):
+def delete_chat_by_id(session: Session, chat_id:str):
     """
     Deletes a chat from the database with the given chat id
     
     :param chat_id: the chat id to delete
     :returns: default empty json response with status code 204
     """
-    if chat_id in DB["chats"]:
-        del DB["chats"][chat_id]
-    else:
-        raise EntityNotFoundException(entity_name="Chat", entity_id=chat_id)
+    chat = session.get(ChatInDB, chat_id)
 
-def  get_message_col_by_chat_id(chat_id:str) -> MessageCollection:
+    if chat is None:
+        raise EntityNotFoundException(entity_name="Chat", entity_id=chat_id)
+    
+    session.delete(chat)
+    session.commit()
+
+def  get_message_col_by_chat_id(session: Session, chat_id:str) -> MessageCollection:
     """
     Gets a collection of messages given from a single chat with the provided
     chat id
@@ -144,20 +269,23 @@ def  get_message_col_by_chat_id(chat_id:str) -> MessageCollection:
     :param chat_id: the chat id to grab messages from
     :returns: a MessageCollection of all messages in the given chat
     """
-    messages = []
-    if chat_id in DB["chats"]:
-        for message in DB["chats"][chat_id]["messages"]:
-            messages.append(Message(
-                id = message["id"],
-                user_id = message["user_id"],
-                text = message["text"],
-                created_at= message["created_at"]
-            ))
-        return MessageCollection(meta = Metadata(count=len(messages)), messages=messages)
-    else:
-        raise EntityNotFoundException(entity_name="Chat", entity_id=chat_id)
+    messages = session.exec(select(MessageInDB).where(MessageInDB.chat_id == chat_id)).all()
+    m_list = []
+    for message in messages:
+        m_list.append(Message(
+            id = message.id,
+            text = message.text,
+            chat_id = message.chat_id,
+            user = get_user(session, message.user.id).user,
+            created_at = message.created_at
+        ))
+    
+    return MessageCollection(
+        meta = Metadata(count = len(m_list)),
+        messages = m_list
+    )
 
-def get_users_in_chat_by_chat_id(chat_id:str) -> UserCollection:
+def get_users_in_chat_by_chat_id(session: Session,chat_id:str) -> UserCollection:
     """
     Gets a collection of users who are participating in a given chat
     found by the provided chat id
@@ -165,17 +293,24 @@ def get_users_in_chat_by_chat_id(chat_id:str) -> UserCollection:
     :param chat_id: the chat id to grab users from
     :returns: a UserCollection of all users in the given chat
     """
+    chat = session.get(ChatInDB, chat_id)
+
     users = []
-    if chat_id in DB["chats"]:
-        for user in DB["chats"][chat_id]["user_ids"]:
-            users.append(UserInDB(
-                id=user,
-                created_at = DB["users"][user]["created_at"]
-            ))
-        sorted_users = chats=sorted(users, key=lambda x: x.id)
-        return UserCollection(meta=Metadata(count=len(sorted_users)), users=sorted_users)
-    else:
-        raise EntityNotFoundException(entity_name="Chat", entity_id=chat_id) 
+    for user in chat.users:
+        users.append(User(
+            id = user.id,
+            username = user.username,
+            email = user.email,
+            created_at = user.created_at
+        ))
+    
+    return UserCollection(
+        meta = Metadata(
+            count = len(users)
+        ),
+        users = users
+    )
+
 
 class EntityNotFoundException(Exception):
     def __init__(self, *, entity_name: str, entity_id: str):
