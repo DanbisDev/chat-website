@@ -1,3 +1,4 @@
+from mangum import Mangum
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, HTMLResponse
@@ -8,6 +9,7 @@ from backend.database import EntityNotFoundException
 from backend.database import EntityAlreadyExistsException
 from backend.database import create_db_and_tables
 from contextlib import asynccontextmanager
+
 
 
 
@@ -81,3 +83,5 @@ def handle_entity_already_exists(
             },
         },
     )
+
+lambda_handler = Mangum(app)

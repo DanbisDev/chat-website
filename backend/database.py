@@ -1,15 +1,22 @@
 from datetime import datetime
+import os
 from uuid import uuid4
 from sqlmodel import Session, SQLModel, create_engine, select
 from backend.schema import UserInDB, ChatInDB, MessageInDB, UserChatLinkInDB
 
 from backend.entities import *
 
+if os.environ.get("DB_LOCATION") == "EFS":
+    db_path = "/mnt/efs/pony_express.db"
+    echo = False
+else:
+    db_path = "backend/pony_express.db"
+    echo = True
 
 engine = create_engine(
-    "sqlite:///backend/pony_express.db",
-    echo=True,
-    connect_args={"check_same_thread": False}
+    f"sqlite:///{db_path}",
+    echo=echo,
+    connect_args={"check_same_thread": False},
 )
 
 def create_db_and_tables():
